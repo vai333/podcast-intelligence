@@ -49,6 +49,7 @@ Useful commands:
 | `npm run backfill:real` | One-off: replaces demo history with the real episodes of the last five weeks (exact video links), then run `npm run worker:drain` |
 | `npm run import:extractions -- <file>` | Saves analyses produced outside Gemini (episode id to guests, topics, sponsors), marked metadata-only |
 | `npm run briefs:generate` | Builds the weekly briefs for the last five weeks (or given Mondays) from the analysed episodes |
+| `npm run briefs:send` | Emails every brief that has not been sent yet (oldest first) to BRIEF_RECIPIENTS, once each |
 | `npm test` | Unit tests |
 | `npm run test:db` | Integration tests against your real Neon database (queue, swaps, login tokens) |
 | `DATA_SOURCE=mock npm run dev` | Dashboard on built-in sample data, no database needed |

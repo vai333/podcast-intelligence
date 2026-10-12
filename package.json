@@ -19,7 +19,8 @@
     "send:test": "tsx --env-file=.env.local scripts/send-test-brief.ts",
     "backfill:real": "tsx --env-file=.env.local scripts/backfill-real.ts",
     "import:extractions": "tsx --env-file=.env.local scripts/import-extractions.ts",
-    "briefs:generate": "tsx --env-file=.env.local scripts/generate-briefs.ts"
+    "briefs:generate": "tsx --env-file=.env.local scripts/generate-briefs.ts",
+    "briefs:send": "tsx --env-file=.env.local scripts/send-briefs.ts"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",

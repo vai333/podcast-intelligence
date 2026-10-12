@@ -1,6 +1,7 @@
 // The Monday email: inline-styled, table-based HTML plus a plain-text alternative (spec section 11).
 // Every piece of third-party text (titles, names, evidence quotes) is HTML-escaped.
 import type { Brief } from "@/lib/data/types";
+import { BRIEF_TOP_N } from "@/lib/scoring";
 import { formatCompact, formatIST, formatWeekLabel } from "@/lib/time";
 
 export const esc = (s: string) =>
@@ -35,7 +36,7 @@ export function briefHtml(b: Brief, appUrl: string): string {
     .join("");
 
   const guests = b.guests
-    .slice(0, 5)
+    .slice(0, BRIEF_TOP_N)
     .map((g) => {
       const eps = g.appearances.slice(0, 2).map((a) => `${esc(a.showName)} (${esc(formatIST(a.publishedAt, "day"))})`).join(", ");
       return row(
@@ -48,7 +49,7 @@ export function briefHtml(b: Brief, appUrl: string): string {
     .join("");
 
   const topics = b.topics
-    .slice(0, 5)
+    .slice(0, BRIEF_TOP_N)
     .map((t) =>
       row(
         `<strong style="font-size:16px;">${esc(t.label)}</strong>${t.rising ? `<span style="color:#137333;font-weight:600;"> &middot; Rising (${t.rising.thisWeek} this week vs ${t.rising.prevAvg} avg)</span>` : ""}<br/>
@@ -58,7 +59,7 @@ export function briefHtml(b: Brief, appUrl: string): string {
     .join("");
 
   const sponsors = b.sponsors
-    .slice(0, 8)
+    .slice(0, BRIEF_TOP_N)
     .map((s) => {
       const m = s.mentions[0];
       return row(
@@ -68,6 +69,7 @@ export function briefHtml(b: Brief, appUrl: string): string {
     })
     .join("");
 
+  const more = (n: number, what: string) => (n > BRIEF_TOP_N ? row(`<span style="color:${MUTED};">+ ${n - BRIEF_TOP_N} more ${what} in the full dashboard</span>`) : "");
   const empty = (msg: string) => row(`<span style="color:${MUTED};">${esc(msg)}</span>`);
 
   return `<!doctype html><html><body style="margin:0;padding:0;background:#fafaf9;">
@@ -79,9 +81,9 @@ export function briefHtml(b: Brief, appUrl: string): string {
 </td></tr>
 <tr><td style="padding:0 28px 24px 28px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0">
   ${bullets || `<tr><td style="font-family:${FONT};font-size:15px;color:${MUTED};">A quiet week.</td></tr>`}
-  ${section("Trending guests", "Who is bookable right now?", guests || empty("No trending guests this week."))}
-  ${section("Trending topics", "What is everyone covering?", topics || empty("No topic is on 2+ shows yet."))}
-  ${section("Active sponsors", "Who is spending on podcast ads?", sponsors || empty("No sponsors detected this week."))}
+  ${section("Trending guests", "Who is bookable right now?", (guests ? guests + more(b.guests.length, "guests") : empty("No trending guests this week.")))}
+  ${section("Trending topics", "What is everyone covering?", (topics ? topics + more(b.topics.length, "topics") : empty("No topic is on 2+ shows yet.")))}
+  ${section("Active sponsors", "Who is spending on podcast ads?", (sponsors ? sponsors + more(b.sponsors.length, "sponsors") : empty("No sponsors detected this week.")))}
   <tr><td style="padding:10px 0 0 0;font-family:${FONT};font-size:12px;line-height:18px;color:${MUTED};">Sponsors come from host-read and baked-in placements and description links. Dynamically inserted ads are not captured.</td></tr>
 </table></td></tr>
 <tr><td align="center" style="padding:4px 28px 8px 28px;">
@@ -99,18 +101,21 @@ export function briefText(b: Brief, appUrl: string): string {
   const lines: string[] = [`PODCAST INTELLIGENCE BRIEF: Week of ${formatWeekLabel(b.weekStart)}`, "", "WHAT MATTERS THIS WEEK", ...b.summary.map((s) => `- ${s.text}`), ""];
   lines.push("TRENDING GUESTS");
   if (!b.guests.length) lines.push("- None this week.");
-  for (const g of b.guests.slice(0, 5)) {
+  for (const g of b.guests.slice(0, BRIEF_TOP_N)) {
     lines.push(`- ${g.name}${g.company ? ` (${g.company})` : ""}: ${g.mediaRound ? `media round, ${g.showsCount} shows in ${Math.max(g.spanDays, 1)} days` : `top ${Math.max(100 - g.viewsPercentile, 1)}% by views`}`);
   }
+  if (b.guests.length > BRIEF_TOP_N) lines.push(`  + ${b.guests.length - BRIEF_TOP_N} more in the full dashboard`);
   lines.push("", "TRENDING TOPICS");
   if (!b.topics.length) lines.push("- None this week.");
-  for (const t of b.topics.slice(0, 5)) {
+  for (const t of b.topics.slice(0, BRIEF_TOP_N)) {
     lines.push(`- ${t.label}${t.rising ? " (rising)" : ""}: ${t.showsCount} shows, ${t.episodesCount} episodes`);
     if (t.counterAngle) lines.push(`  Angle (AI suggestion): ${t.counterAngle}`);
   }
+  if (b.topics.length > BRIEF_TOP_N) lines.push(`  + ${b.topics.length - BRIEF_TOP_N} more in the full dashboard`);
   lines.push("", "ACTIVE SPONSORS");
   if (!b.sponsors.length) lines.push("- None this week.");
-  for (const s of b.sponsors.slice(0, 8)) lines.push(`- ${s.name}${b.isFirstWeek ? "" : ` (${s.status})`}: ${s.showsCount} ${s.showsCount === 1 ? "show" : "shows"}`);
+  for (const s of b.sponsors.slice(0, BRIEF_TOP_N)) lines.push(`- ${s.name}${b.isFirstWeek ? "" : ` (${s.status})`}: ${s.showsCount} ${s.showsCount === 1 ? "show" : "shows"}`);
+  if (b.sponsors.length > BRIEF_TOP_N) lines.push(`  + ${b.sponsors.length - BRIEF_TOP_N} more in the full dashboard`);
   lines.push("", `Analyzed ${cov.analyzedVideo + cov.analyzedMetadata} of ${cov.episodesFound} episodes.`, "", `Open full dashboard: ${url}`);
   return lines.join("\n");
 }

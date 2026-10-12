@@ -2,6 +2,7 @@ import { ArrowRightLeft, Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { AiTag } from "@/components/data/badges";
 import type { Brief } from "@/lib/data/types";
+import { BRIEF_TOP_N } from "@/lib/scoring";
 import { formatIST, formatWeekLabel, formatWeekOf } from "@/lib/time";
 import { ChapterCards, HomeStory, type Chapter } from "@/components/home/home-story";
 import { MonitorPulse } from "./monitor-pulse";
@@ -45,6 +46,79 @@ function topOf(b: Brief, k: SectionKey): Chapter["top"] {
   if (k === "guests") return b.guests.slice(0, 3).map((g) => ({ label: g.name, meta: `${g.showsCount} ${g.showsCount === 1 ? "show" : "shows"}${views(g.topViews)}` }));
   if (k === "topics") return b.topics.slice(0, 3).map((t) => ({ label: t.label, meta: `${t.showsCount} shows · ${t.episodesCount} eps${t.rising ? " · rising" : ""}` }));
   return b.sponsors.slice(0, 3).map((s) => ({ label: s.name, meta: `${s.showsCount} ${s.showsCount === 1 ? "show" : "shows"}${b.isFirstWeek ? "" : ` · ${s.status}`}` }));
+}
+
+/** The week's headline guests, topics and sponsors: the top few of each, with a link to the full list. */
+function TopThree({ brief, base }: { brief: Brief; base: string }) {
+  const cols = [
+    {
+      key: "guests" as const,
+      title: "Guests",
+      total: brief.guests.length,
+      items: brief.guests.slice(0, BRIEF_TOP_N).map((g) => ({
+        id: g.id,
+        href: `/dashboard/guests/${g.id}`,
+        label: g.name,
+        meta: g.mediaRound ? `On ${g.showsCount} shows` : `${g.company ?? "Above-median views"}`,
+      })),
+    },
+    {
+      key: "topics" as const,
+      title: "Topics",
+      total: brief.topics.length,
+      items: brief.topics.slice(0, BRIEF_TOP_N).map((t) => ({
+        id: t.id,
+        href: `/dashboard/topics/${t.id}`,
+        label: t.label,
+        meta: `${t.showsCount} shows · ${t.episodesCount} episodes${t.rising ? " · rising" : ""}`,
+      })),
+    },
+    {
+      key: "sponsors" as const,
+      title: "Sponsors",
+      total: brief.sponsors.length,
+      items: brief.sponsors.slice(0, BRIEF_TOP_N).map((s) => ({
+        id: s.id,
+        href: `/dashboard/sponsors/${s.id}`,
+        label: s.name,
+        meta: `${s.showsCount} ${s.showsCount === 1 ? "show" : "shows"}${brief.isFirstWeek ? "" : ` · ${s.status}`}`,
+      })),
+    },
+  ];
+  return (
+    <div className="mt-6 border-t border-border pt-5">
+      <p className="eyebrow">Top {BRIEF_TOP_N} this week</p>
+      <div className="mt-3 grid gap-6 md:grid-cols-3">
+        {cols.map((c) => (
+          <div key={c.key} className="min-w-0">
+            <h3 className="text-sm font-semibold uppercase tracking-wide text-muted">{c.title}</h3>
+            {c.items.length ? (
+              <ol className="mt-2 space-y-2.5">
+                {c.items.map((it, i) => (
+                  <li key={it.id} className="flex gap-3">
+                    <span className="num mt-0.5 w-4 shrink-0 text-xs text-accent">{i + 1}</span>
+                    <span className="min-w-0">
+                      <Link href={it.href} className="block break-words font-semibold hover:text-accent hover:underline">
+                        {it.label}
+                      </Link>
+                      <span className="block break-words text-xs text-muted">{it.meta}</span>
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            ) : (
+              <p className="mt-2 text-sm text-muted">None this week.</p>
+            )}
+            {c.total > BRIEF_TOP_N ? (
+              <Link href={`${base}/${c.key}`} className="mt-3 inline-block text-sm font-medium text-accent hover:underline">
+                See all {c.total} →
+              </Link>
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 }
 
 /** Home: the scroll story first, then the week's brief summary and the three doors into the detail. */
@@ -122,7 +196,8 @@ export function BriefHome({ brief, weeks, latestWeek, showCount }: { brief: Brie
           ) : (
             <p className="text-muted">Nothing stood out this week. A quiet week is normal early on.</p>
           )}
-          <div className="mt-5 space-y-2 border-t border-border pt-4">
+          <TopThree brief={brief} base={base} />
+          <div className="mt-6 space-y-2 border-t border-border pt-4">
             <CoverageLine coverage={brief.coverage} />
             {brief.lineupChanges.length ? (
               <p className="flex items-start gap-2 text-sm text-muted">

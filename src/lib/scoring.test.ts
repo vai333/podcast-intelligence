@@ -7,6 +7,7 @@ import {
   scoreGuests,
   scoreSponsors,
   scoreTopics,
+  TREND_RULES,
 } from "./scoring";
 
 const DAY = 86_400_000;
@@ -60,9 +61,9 @@ describe("guests", () => {
     const stale = [ep("1", "a", 12, { guestIds: ["g"] }), ep("2", "b", 14, { guestIds: ["g"] })];
     expect(scoreGuests(stale, allActive, w)).toHaveLength(0);
   });
-  it("trends on top-10% views alone", () => {
+  it("trends on above-median interview views alone", () => {
     // views are ranked among interview episodes, so the other episodes here have guests too
-    const eps = Array.from({ length: 12 }, (_, i) => ep(`x${i}`, "a", 3 + i, { views: 1000 + i, guestIds: [`filler${i}`] }));
+    const eps = Array.from({ length: 12 }, (_, i) => ep(`x${i}`, "a", 3 + i, { views: 1000, guestIds: [`filler${i}`] }));
     eps.push(ep("big", "b", 1, { views: 900000, guestIds: ["star"] }));
     const res = scoreGuests(eps, allActive, w);
     expect(res.map((r) => r.guestId)).toEqual(["star"]);
@@ -70,11 +71,11 @@ describe("guests", () => {
   });
   it("ranks an interview against other interviews, not against guest-less news shows", () => {
     const news = Array.from({ length: 10 }, (_, i) => ep(`n${i}`, "c", 2 + i, { views: 500000 + i }));
-    const interviews = Array.from({ length: 12 }, (_, i) => ep(`i${i}`, "a", 3 + i, { views: 1000 + i, guestIds: [`filler${i}`] }));
+    const interviews = Array.from({ length: 12 }, (_, i) => ep(`i${i}`, "a", 3 + i, { views: 1000, guestIds: [`filler${i}`] }));
     interviews.push(ep("top", "b", 1, { views: 20000, guestIds: ["star"] }));
     const res = scoreGuests([...news, ...interviews], allActive, w);
     expect(res.map((r) => r.guestId)).toEqual(["star"]);
-    expect(res[0].viewsPercentile).toBeGreaterThanOrEqual(90);
+    expect(res[0].viewsPercentile).toBeGreaterThanOrEqual(TREND_RULES.guestTopPercentile);
   });
   it("uses 0.6*shows + 0.4*views", () => {
     const eps = [
@@ -88,18 +89,20 @@ describe("guests", () => {
 });
 
 describe("topics", () => {
-  it("needs 2 shows, 3 episodes, and one fresh episode", () => {
+  it("needs the minimum shows and episodes, and one fresh episode", () => {
     const eps = [
       ep("1", "a", 1, { topicIds: ["t"] }),
       ep("2", "b", 9, { topicIds: ["t"] }),
-      ep("3", "b", 15, { topicIds: ["t"] }),
-      ep("4", "a", 2, { topicIds: ["u"] }),
-      ep("5", "b", 12, { topicIds: ["u"] }),
+      ep("4", "a", 2, { topicIds: ["u"] }), // two episodes but only one show
+      ep("5", "a", 12, { topicIds: ["u"] }),
+      ep("6", "a", 15, { topicIds: ["old"] }), // two shows and episodes, but nothing fresh this week
+      ep("7", "b", 17, { topicIds: ["old"] }),
     ];
     const r = scoreTopics(eps, allActive, w);
+    expect(TREND_RULES.topicMinShows).toBe(2);
     expect(r.trending.map((t) => t.topicId)).toEqual(["t"]);
     expect(r.emerging.map((t) => t.topicId)).toEqual(["u"]);
-    expect(r.emerging[0].needs).toBe("1 more episode");
+    expect(r.emerging[0].needs).toBe("1 more show");
   });
   it("marks rising when this week beats the 3-week average", () => {
     const eps = [

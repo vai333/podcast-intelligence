@@ -60,6 +60,20 @@ export function heatFor(score: number): Heat {
   return "emerging";
 }
 
+/** How many guests, topics and sponsors the brief headlines (email and dashboard); the section pages list them all. */
+export const BRIEF_TOP_N = 3;
+
+/**
+ * What counts as "trending". A guest trends on a media round (on this many shows) or when their episode is in
+ * the top share of interview views; a topic trends when it is on enough shows and episodes in the lookback.
+ */
+export const TREND_RULES = {
+  guestMinShows: 2,
+  guestTopPercentile: 50, // a guest's best episode must beat this share of interview episodes (above the median)
+  topicMinShows: 2,
+  topicMinEpisodes: 2,
+};
+
 const maxOf = (xs: number[]) => (xs.length ? Math.max(...xs) : 0);
 
 /* ------------------------------ guests ------------------------------ */
@@ -95,8 +109,8 @@ export function scoreGuests(all: ScoringEpisode[], map: IntervalMap, w: Window):
     const topViews = views.length ? Math.max(...views) : null;
     const vScore = viewsScore(topViews, maxViews);
     const pct = viewsPercentile(topViews, allViews);
-    const mediaRound = showIds.length >= 2;
-    if (!(mediaRound || pct >= 90)) continue;
+    const mediaRound = showIds.length >= TREND_RULES.guestMinShows;
+    if (!(mediaRound || pct >= TREND_RULES.guestTopPercentile)) continue;
     const times = list.map((e) => e.publishedAt);
     out.push({
       guestId,
@@ -173,7 +187,7 @@ export function scoreTopics(all: ScoringEpisode[], map: IntervalMap, w: Window):
       viewsScore: vScore,
       trendScore: 0.5 * Math.min(showIds.length / 4, 1) + 0.3 * Math.min(list.length / 6, 1) + 0.2 * vScore,
     };
-    if (showIds.length >= 2 && list.length >= 3) {
+    if (showIds.length >= TREND_RULES.topicMinShows && list.length >= TREND_RULES.topicMinEpisodes) {
       trending.push(score);
     } else if (list.length >= 2 || showIds.length >= 2) {
       const needs =

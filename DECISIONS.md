@@ -138,3 +138,8 @@ Front-end phase. The backend (Neon, cron, Gemini, Resend) is not built yet. Ever
 - **Limits:** no audio or video was heard, so sponsors spoken aloud and guests named only in the audio are not captured. Sponsors come from description links and wording (Vested, Odoo, CoinDCX, The 1% Club, Neurogum, Ditto, FDE Academy).
 - **Guest ranking changed:** a guest's views are now ranked among interview episodes, not among all episodes. Daily news shows (Markets by Zerodha, Daybreak) have no guests and far more views, so under the old rule no interview could ever reach the top 10%. The "2+ shows" media-round rule is unchanged.
 - **A show's own company is never its sponsor:** Zerodha on Markets by Zerodha is self-promotion. The prompt says so, and the save step drops a sponsor whose name is part of the show's name.
+
+## Looser trending rules and a top-3 brief (changed after review)
+- **Rules** (`TREND_RULES` in `src/lib/scoring.ts`): a guest trends on a media round (2+ shows) or when their best episode has above-median views among interview episodes (was top 10%); a topic trends on 2+ shows and 2+ episodes in the lookback (was 3 episodes). Tested on the real five weeks: guests per week went from 0,0,0,1,0 to 4,3,4,2,1 and topics from 0,1,4,4,2 to 1,5,5,6,6. The latest week has fewer guests because new episodes have not collected views yet.
+- **Top 3:** the email and a new "Top 3 this week" panel on the dashboard brief show the top three guests, topics and sponsors (`BRIEF_TOP_N`); the email adds "+ N more in the full dashboard", and the section pages list everything.
+- **The five past briefs were emailed** (`npm run briefs:send`, which sends every unsent brief once, oldest first).
