@@ -125,3 +125,10 @@ Front-end phase. The backend (Neon, cron, Gemini, Resend) is not built yet. Ever
 
 ## Show matching needs a human
 - Real channel search is ambiguous (generic names, look-alike channels). The matcher scores name similarity first (exact title beats an article-less look-alike, "X with Host" counts as a match, whole words only) and popularity second, but `npm run seed` prints every match for confirmation. "Zero to Infinity" had no confident match and is left unlinked (shown as "Needs attention").
+
+## Demo history replaced by real episodes (changed after review)
+- **What:** The invented demo history was removed and the last five weeks of real episodes from the ten monitored shows were loaded instead (`npm run backfill:real`, `scripts/backfill-real.ts`). Every episode link now opens the exact YouTube video; the demo rows could only link to the show's channel because the episodes did not exist.
+- **How:** the script deletes the demo episodes, what only they referenced, the demo briefs and the demo lineup intervals; moves each active show's tracking start back five weeks; runs discovery; queues extraction oldest-first; then queues one `weekly_analysis` job per week, which waits until extraction is finished. Episode length limits come from Settings, as always.
+- **The one exception to "no backfill":** this is a deliberate, one-time bootstrap so the dashboard starts with real history. Normal adds and swaps still track from now.
+- **Gemini free tier:** about 20 requests a day per model, so around 60 analyses a day across the three models. Deferred jobs resume on the next nightly run; the briefs appear once the weeks' episodes are analysed.
+- Past briefs no longer say "Not emailed yet": only the latest brief is ever emailed.

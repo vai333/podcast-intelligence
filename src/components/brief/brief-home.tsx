@@ -82,10 +82,12 @@ export function BriefHome({ brief, weeks, latestWeek, showCount }: { brief: Brie
             <span>
               Generated <span className="num">{formatIST(brief.generatedAt, "daytime")}</span>
             </span>
-            <span className="inline-flex items-center gap-1">
-              <Mail size={12} aria-hidden />
-              {brief.sentAt ? <>Emailed <span className="num">{formatIST(brief.sentAt, "daytime")}</span></> : "Not emailed yet. Retry from the System page."}
-            </span>
+            {brief.sentAt || brief.isLatest ? (
+              <span className="inline-flex items-center gap-1">
+                <Mail size={12} aria-hidden />
+                {brief.sentAt ? <>Emailed <span className="num">{formatIST(brief.sentAt, "daytime")}</span></> : "Not emailed yet. Retry from the System page."}
+              </span>
+            ) : null}
           </p>
         </header>
 

@@ -16,7 +16,8 @@
     "demo:clear": "tsx --env-file=.env.local scripts/demo-clear.ts",
     "worker:drain": "tsx --env-file=.env.local scripts/worker-drain.ts",
     "test:db": "RUN_DB_TESTS=1 node --env-file=.env.local ./node_modules/vitest/vitest.mjs run src/lib/db.integration.test.ts",
-    "send:test": "tsx --env-file=.env.local scripts/send-test-brief.ts"
+    "send:test": "tsx --env-file=.env.local scripts/send-test-brief.ts",
+    "backfill:real": "tsx --env-file=.env.local scripts/backfill-real.ts"
   },
   "dependencies": {
     "@google/genai": "^2.28.0",
