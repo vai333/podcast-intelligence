@@ -6,12 +6,20 @@ Front-end phase. The backend (Neon, cron, Gemini, Resend) is not built yet. Ever
 - **What:** `/dashboard` (and each past week's home) shows only the "What matters this week" summary, a compact trust line (coverage, lineup changes) and three large buttons: Guests, Topics, Sponsors. Each button opens that section for the same week at `/dashboard/briefs/[week]/guests|topics|sponsors`, with a week selector, a tab switch between the three sections, and a link to the all-time explorer.
 - **Why:** The first version put all three ranked lists on one scrolling page, which the reviewer found chaotic. A short summary with clear entry points is calmer and still answers "what happened" in seconds.
 - Each button carries a count and a one-line teaser (for example "Priya Raghavan is on 3 shows") so it says what is inside without listing it.
-- The sidebar's "Latest brief" stays highlighted on the latest week's section pages (`onLatestBrief` in `nav-config.ts`).
+- The "Brief" nav item stays highlighted on the latest week's section pages (`onLatestBrief` in `nav-config.ts`).
+
+## Home opens with a scroll story, then the brief (changed after review)
+- **What:** The home page now starts with a full-screen WebGL particle story (`src/components/home/*`). As the page scrolls, about 56,000 particles (38,000 on phones) morph from a studio microphone (we are listening) into a head and shoulders (Guests), a network globe (Topics) and a broadcast beacon (Sponsors). Each chapter shows its count and top three, with a button into that section. The brief's header, summary and the three section cards follow underneath.
+- **How it looks sharp:** particles are small crisp discs, each lit like a point on a solid surface (key, fill and rim light from per-point normals), the far side of a solid is dimmed, and a sparse additive glow pass plus distant stars add depth. Points are ordered along a Z-order curve, so the morph flows instead of scrambling. The scroll holds still briefly on each chapter.
+- **The guest** is modelled on a classic construction drawing of a man's head (Loomis method), in three-quarter view turned towards the text: a long, lean face with a forward-projecting chin clear of the neck, a buzz cut (darker, denser, slightly fuzzy points with a natural hairline), flattened side planes, strong brow, open almond eyes, angular nose, cheekbones and a square jaw, the ear, and a neck with its two diagonal muscles, no shoulders. Like the drawing, it is mostly lines: bright pencil-style strokes trace the brows, eyelids, nose, lips, jaw, chin, ear and neck, and the construction lines (centre line, brow line, side circle) are drawn in the accent colour. Strokes are marked by an albedo above 1 (1.25 stroke, 1.5 guide), which the shader draws at full brightness whatever the lighting.
+- **Light theme** draws solid, slightly larger ink dots (shadows near-black, lit areas warm grey, edges in the accent) because dots on a pale background cannot add up into light the way they do on black.
+- The point clouds are generated in a Web Worker (about 0.4 s), so the page stays responsive while they build.
+- **Cost and fallbacks:** three.js loads only on the home page, in its own chunk, after the page is interactive. With reduced motion, or without WebGL, the story is replaced by a plain intro. "Skip to the brief" is always visible.
 
 ## Visual theme: near-black with an orange accent (changed after review)
 - **What:** Dark is now the default theme (light is the alternate), with near-black surfaces, thin borders, an orange accent, bold white headings, small orange "eyebrow" labels above headings, and Plus Jakarta Sans. This follows the reference image the reviewer supplied. Tokens live in `src/app/globals.css` and mirror in `src/lib/tokens.ts`.
 - **Buttons and active states use dark text on the orange** in dark mode. White on that orange is only about 3:1, which fails the 4.5:1 text rule. Light mode uses a deeper orange (`#c2410c`) with white text.
-- **Kept the sidebar** rather than the reference's top navigation bar, because the app has nine pages. Easy to revisit if a top bar is wanted.
+- **Top navigation bar** (changed after review; it was a left sidebar). Seven items sit in the bar, and System and Settings are under an Admin menu. Tablets show icons only; phones keep the bottom bar. "All times IST" and data freshness moved to the page footer.
 - No photographs are used; the hero has a soft orange glow instead.
 
 ## Design direction: "Briefing Scroll, console underneath"

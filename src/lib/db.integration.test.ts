@@ -3,7 +3,7 @@
 import { eq, inArray, sql } from "drizzle-orm";
 import { afterAll, describe, expect, it } from "vitest";
 import { closeDb, db } from "@/lib/db/client";
-import { jobs, shows } from "@/lib/db/schema";
+import { jobs, settings, shows } from "@/lib/db/schema";
 import { MAX_ATTEMPTS, claimNext, counts, defer, enqueue, fail, markDone, requeueStale } from "@/lib/pipeline/queue";
 import { deleteSetting, getSettings, saveSettings } from "@/lib/pipeline/settings";
 import { addShow, readdShow, removeShow, swapShow } from "@/lib/services/shows";
@@ -98,7 +98,21 @@ describe.skipIf(!RUN)("lineup changes", () => {
     await closeDb();
   });
 
-  it("add, swap, remove and re-add follow the no-backfill, nothing-deleted rules", async () => {
+  /** Run with room for one more show, whatever the real lineup is, then put the settings back exactly. */
+  const withRoomForOne = async (fn: () => Promise<void>) => {
+    const saved = await db().select().from(settings);
+    const active = (await db().select().from(shows).where(sql`${shows.activeTo} is null`)).length;
+    const cur = await getSettings();
+    try {
+      await saveSettings({ ...cur, maxActiveShows: Math.max(cur.maxActiveShows, active + 1) });
+      await fn();
+    } finally {
+      await db().delete(settings).where(inArray(settings.key, ["maxActiveShows", "minEpisodeMinutes", "maxEpisodeMinutes", "trendLookbackDays"]));
+      if (saved.length) await db().insert(settings).values(saved).onConflictDoNothing();
+    }
+  };
+
+  it("add, swap, remove and re-add follow the no-backfill, nothing-deleted rules", () => withRoomForOne(async () => {
     await cleanup();
     const [{ eps }] = (await db().execute(sql`select count(*)::int as eps from episodes`)).rows as { eps: number }[];
     const [{ brf }] = (await db().execute(sql`select count(*)::int as brf from briefs`)).rows as { brf: number }[];
@@ -134,7 +148,7 @@ describe.skipIf(!RUN)("lineup changes", () => {
     const [{ brf: brf2 }] = (await db().execute(sql`select count(*)::int as brf2 from briefs`)).rows.map((r) => ({ brf: (r as { brf2: number }).brf2 }));
     expect(eps2).toBe(eps);
     expect(brf2).toBe(brf);
-  }, 60_000);
+  }), 60_000);
 
   it("refuses to add a show beyond the cap, and lets the cap be raised again", async () => {
     await cleanup();

@@ -95,7 +95,7 @@ On screen the numbers are shown as **Strong / Medium / Emerging** plus plain rea
 
 | Screen | Purpose |
 |---|---|
-| **Home** | Live heartbeat ("Monitoring N shows"), the "What matters" summary, three buttons: Guests · Topics · Sponsors |
+| **Home** | A full-screen scroll story first: particles morph from a microphone (with the live "Monitoring N shows" heartbeat) into a sketched guest's head (construction-drawing style), a topic network and a sponsor beacon, each with its count and top three. Then the brief: week selector, "What matters" summary, and three buttons (Guests · Topics · Sponsors) |
 | **Guests / Topics / Sponsors (this week)** | Ranked rows with evidence, links to the source episode, copy-ready booking note / episode idea |
 | **Past briefs** | Every week, frozen exactly as it was sent |
 | **Explore** | All-time guests, topics (12-week chart + heatmap), sponsors |
@@ -162,4 +162,5 @@ cron_runs · api_usage · settings · login_attempts · search_cache
 | Email template | `src/lib/email/*` |
 | Login | `src/lib/auth/*`, `src/middleware.ts` |
 | Pages and components | `src/app/dashboard/*`, `src/components/*` |
+| Home scroll story (WebGL) | `src/components/home/*` |
 | Decisions and reasons | `DECISIONS.md` |
