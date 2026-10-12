@@ -1,26 +1,263 @@
 @import "tailwindcss";
 
+/* Dark mode is class-based (set before paint by an inline script in layout.tsx). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ---------------------------------------------------------------
+   Design tokens. Semantic roles only; components never use raw hex.
+   Mirrored in src/lib/tokens.ts for the contrast test.
+   Dark is the primary theme (near-black, orange accent); light is the alternate.
+---------------------------------------------------------------- */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #fafaf9;
+  --surface: #ffffff;
+  --surface-2: #f4f4f2;
+  --border: #e7e5e4;
+  --fg: #1c1917;
+  --fg-muted: #57534e;
+  --accent: #c2410c;
+  --accent-fg: #ffffff;
+  --accent-soft: #ffedd5;
+  --accent-soft-fg: #9a3412;
+  --success: #137333;
+  --success-soft: #e6f4ea;
+  --warn: #8a5300;
+  --warn-soft: #fef3d6;
+  --danger: #b3261e;
+  --danger-soft: #fce8e6;
+  --info: #0b57d0;
+  --info-soft: #e8f0fe;
+  --ring: #c2410c;
+
+  --chart-1: #c2410c;
+  --chart-2: #1d63d8;
+  --chart-3: #0f8b6d;
+  --chart-4: #8e44ad;
+  --chart-5: #b8860b;
+  --chart-other: #8a93a2;
+  --heat-span: 37%; /* heatmap cell intensity above the 8% floor */
+  --glow: rgba(194, 65, 12, 0.14);
+}
+
+.dark {
+  --bg: #0a0a0b;
+  --surface: #111113;
+  --surface-2: #1a1a1d;
+  --border: #27272b;
+  --fg: #f5f5f4;
+  --fg-muted: #a1a1a8;
+  --accent: #ff6a2b;
+  --accent-fg: #0a0a0b;
+  --accent-soft: #2b1710;
+  --accent-soft-fg: #ff9a6b;
+  --success: #4ade80;
+  --success-soft: #12281a;
+  --warn: #fbbf24;
+  --warn-soft: #2e2408;
+  --danger: #ff7b72;
+  --danger-soft: #2d1412;
+  --info: #7cb4ff;
+  --info-soft: #101c2e;
+  --ring: #ff6a2b;
+
+  --chart-1: #ff6a2b;
+  --chart-2: #5aa9ff;
+  --chart-3: #34d399;
+  --chart-4: #c084fc;
+  --chart-5: #fbbf24;
+  --chart-other: #8a93a2;
+  --heat-span: 24%;
+  --glow: rgba(255, 106, 43, 0.20);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-fg: var(--fg);
+  --color-muted: var(--fg-muted);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-soft-fg: var(--accent-soft-fg);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+  --color-ring: var(--ring);
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-mono), ui-monospace, monospace;
+
+  --radius-chip: 4px;
+  --radius-panel: 8px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 20px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tabular numerals on every number. */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Visible focus ring everywhere. */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@keyframes pulse-soft {
+  50% {
+    opacity: 0.5;
+  }
+}
+.skeleton {
+  background: var(--surface-2);
+  border-radius: 6px;
+  animation: pulse-soft 1.6s ease-in-out infinite;
+}
+
+/* Dialog / sheet motion (opacity + transform only). */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes slide-in-right {
+  from {
+    transform: translateX(24px);
+    opacity: 0;
+  }
+}
+@keyframes pop-in {
+  from {
+    transform: translate(-50%, -48%) scale(0.98);
+    opacity: 0;
+  }
+}
+.anim-fade {
+  animation: fade-in 140ms ease-out;
+}
+.anim-sheet {
+  animation: slide-in-right 180ms ease-out;
+}
+.anim-pop {
+  animation: pop-in 150ms ease-out;
+}
+
+/* Reader-mode scroll offset so sticky bars don't cover anchors. */
+.anchor-section {
+  scroll-margin-top: 120px;
+}
+
+/* Deterministic tinted avatar (hue comes from the show name via --h). */
+.avatar {
+  background: hsl(var(--h) 55% 90%);
+  color: hsl(var(--h) 55% 22%);
+}
+.dark .avatar {
+  background: hsl(var(--h) 30% 24%);
+  color: hsl(var(--h) 70% 86%);
+}
+
+/* Small orange label above a heading, as in "Our Specialties". */
+.eyebrow {
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  letter-spacing: 0.01em;
+}
+
+/* Soft orange glow behind a hero heading. */
+.hero-glow {
+  background:
+    radial-gradient(60% 80% at 50% 0%, var(--glow), transparent 70%),
+    linear-gradient(to bottom, transparent, var(--bg));
+}
+
+/* Heartbeat monitor on the home page.
+   A faint trace, plus a bright copy of it revealed through a soft gradient window that glides left to right.
+   Only mask-position animates, so there is no per-frame path recalculation (no glitching). */
+.monitor {
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+.monitor-base {
+  opacity: 0.25;
+}
+.monitor-glow {
+  filter: drop-shadow(0 0 4px var(--accent));
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 70%, #000 85%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, #000 70%, #000 85%, transparent 100%);
+  -webkit-mask-size: 32% 100%;
+  mask-size: 32% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+  will-change: mask-position;
+  animation: monitor-sweep 3.4s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+}
+.pulse-dot {
+  animation: pulse-ping 1.8s ease-out infinite;
+}
+@keyframes monitor-sweep {
+  from {
+    -webkit-mask-position: -32% 0;
+    mask-position: -32% 0;
+  }
+  to {
+    -webkit-mask-position: 150% 0;
+    mask-position: 150% 0;
+  }
+}
+@keyframes pulse-ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  80%,
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .monitor-glow,
+  .pulse-dot {
+    animation: none !important;
+  }
+  .monitor-glow {
+    -webkit-mask-image: none;
+    mask-image: none;
+    opacity: 0.7;
+  }
 }
