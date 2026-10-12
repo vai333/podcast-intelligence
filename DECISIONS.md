@@ -132,3 +132,9 @@ Front-end phase. The backend (Neon, cron, Gemini, Resend) is not built yet. Ever
 - **The one exception to "no backfill":** this is a deliberate, one-time bootstrap so the dashboard starts with real history. Normal adds and swaps still track from now.
 - **Gemini free tier:** about 20 requests a day per model, so around 60 analyses a day across the three models. Deferred jobs resume on the next nightly run; the briefs appear once the weeks' episodes are analysed.
 - Past briefs no longer say "Not emailed yet": only the latest brief is ever emailed.
+
+## The five past weeks were analysed by hand (changed after review)
+- **What:** With Gemini's free tier too slow to analyse 86 episodes, the past five weeks were analysed by Claude reading each episode's title and description (`scripts/import-extractions.ts`), saved through the same `saveExtraction` function the Gemini pipeline uses, and labelled **Metadata only** (low confidence). Four episodes keep Gemini's video analysis. The five briefs were then built with `npm run briefs:generate`; Gemini still merges duplicate names and writes each brief's summary, and it analyses every new week from now on.
+- **Limits:** no audio or video was heard, so sponsors spoken aloud and guests named only in the audio are not captured. Sponsors come from description links and wording (Vested, Odoo, CoinDCX, The 1% Club, Neurogum, Ditto, FDE Academy).
+- **Guest ranking changed:** a guest's views are now ranked among interview episodes, not among all episodes. Daily news shows (Markets by Zerodha, Daybreak) have no guests and far more views, so under the old rule no interview could ever reach the top 10%. The "2+ shows" media-round rule is unchanged.
+- **A show's own company is never its sponsor:** Zerodha on Markets by Zerodha is self-promotion. The prompt says so, and the save step drops a sponsor whose name is part of the show's name.

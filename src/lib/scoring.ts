@@ -79,7 +79,9 @@ export interface GuestScore {
 
 export function scoreGuests(all: ScoringEpisode[], map: IntervalMap, w: Window): GuestScore[] {
   const eps = lookbackEpisodes(all, map, w);
-  const allViews = eps.map((e) => e.views).filter((v): v is number => v !== null);
+  // Views are compared among interview episodes only. Daily news shows have no guests and draw far more views,
+  // so ranking a guest against them would mean no interview could ever reach the top 10%.
+  const allViews = eps.filter((e) => e.guestIds.length).map((e) => e.views).filter((v): v is number => v !== null);
   const maxViews = maxOf(allViews);
 
   const byGuest = new Map<string, ScoringEpisode[]>();

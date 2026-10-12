@@ -28,6 +28,7 @@ SPONSORS
 - For each sponsor give a short VERBATIM evidence quote (at most 25 words) and, if known, the timestamp in seconds where it is said or shown.
 - placement is one of: host_read, pre_roll, mid_roll, post_roll, description_link, on_screen, unknown.
 - source is "video" when you saw or heard it in the episode, or "description" when it comes only from the description text.
+- Never list the show's own company, network, channel or publication as a sponsor (for example Zerodha on Markets by Zerodha, or The Ken's own subscription on The Ken's shows): promoting yourself is not a paid sponsorship.
 - Also scan the episode description for sponsor lines and links and tag those source "description" with placement "description_link".
 
 GENERAL

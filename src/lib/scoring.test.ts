@@ -61,11 +61,20 @@ describe("guests", () => {
     expect(scoreGuests(stale, allActive, w)).toHaveLength(0);
   });
   it("trends on top-10% views alone", () => {
-    const eps = Array.from({ length: 12 }, (_, i) => ep(`x${i}`, "a", 3 + i, { views: 1000 + i }));
+    // views are ranked among interview episodes, so the other episodes here have guests too
+    const eps = Array.from({ length: 12 }, (_, i) => ep(`x${i}`, "a", 3 + i, { views: 1000 + i, guestIds: [`filler${i}`] }));
     eps.push(ep("big", "b", 1, { views: 900000, guestIds: ["star"] }));
     const res = scoreGuests(eps, allActive, w);
     expect(res.map((r) => r.guestId)).toEqual(["star"]);
     expect(res[0].mediaRound).toBe(false);
+  });
+  it("ranks an interview against other interviews, not against guest-less news shows", () => {
+    const news = Array.from({ length: 10 }, (_, i) => ep(`n${i}`, "c", 2 + i, { views: 500000 + i }));
+    const interviews = Array.from({ length: 12 }, (_, i) => ep(`i${i}`, "a", 3 + i, { views: 1000 + i, guestIds: [`filler${i}`] }));
+    interviews.push(ep("top", "b", 1, { views: 20000, guestIds: ["star"] }));
+    const res = scoreGuests([...news, ...interviews], allActive, w);
+    expect(res.map((r) => r.guestId)).toEqual(["star"]);
+    expect(res[0].viewsPercentile).toBeGreaterThanOrEqual(90);
   });
   it("uses 0.6*shows + 0.4*views", () => {
     const eps = [

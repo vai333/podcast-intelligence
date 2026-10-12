@@ -88,11 +88,30 @@ export async function extractEpisode(episodeId: string, opts: { force?: boolean 
     }
   }
 
-  const data = result.data;
+  // A show promoting its own company (for example Markets by Zerodha linking to Zerodha) is not a paid sponsor.
+  const showKey = showName.toLowerCase();
+  const data = { ...result.data, sponsors: result.data.sponsors.filter((s) => !showKey.includes(s.name.trim().toLowerCase())) };
   const guestList = data.guests.filter((g) => g.role === "guest");
   const avgConf = guestList.length ? guestList.reduce((s, g) => s + g.confidence, 0) / guestList.length : 0.7;
   const confidence = depth === "metadata" ? "low" : avgConf >= 0.8 ? "high" : "medium";
 
+  await saveExtraction({ id: ep.id, publishedAt: ep.publishedAt }, data, { depth, model: result.model, usage: result.usage, confidence });
+
+  await addUsage(istDay(), "gemini_episodes", 1);
+  return "extracted";
+}
+
+/**
+ * Store one finished analysis: guests, topics and sponsors, the raw result, and the episode's status.
+ * Used by the Gemini pipeline and by any other analyser that produces the same shape (for example a
+ * hand-written backfill), so every route into the database goes through the same validation and upserts.
+ */
+export async function saveExtraction(
+  ep: { id: string; publishedAt: Date },
+  data: ExtractionResult,
+  meta: { depth: "video" | "metadata"; model: string; usage?: unknown; confidence: "high" | "medium" | "low" },
+): Promise<void> {
+  const { depth, model, usage, confidence } = meta;
   await db().transaction(async (tx) => {
     await clearExtraction(tx, ep.id);
     for (const g of data.guests) {
@@ -118,16 +137,13 @@ export async function extractEpisode(episodeId: string, opts: { force?: boolean 
         });
       }
     }
-    const raw = { result: data, usage: result.usage, depth, summary: data.summary };
+    const raw = { result: data, usage, depth, summary: data.summary };
     await tx
       .insert(extractions)
-      .values({ episodeId: ep.id, model: result.model, rawJson: raw, confidence })
-      .onConflictDoUpdate({ target: extractions.episodeId, set: { model: result.model, rawJson: raw, confidence, createdAt: new Date() } });
+      .values({ episodeId: ep.id, model, rawJson: raw, confidence })
+      .onConflictDoUpdate({ target: extractions.episodeId, set: { model, rawJson: raw, confidence, createdAt: new Date() } });
     await tx.update(episodes).set({ status: "extracted", analysisDepth: depth, statusNote: null }).where(eq(episodes.id, ep.id));
   });
-
-  await addUsage(istDay(), "gemini_episodes", 1);
-  return "extracted";
 }
 
 /** Called when a job runs out of attempts, so the episode shows up as failed on the Episodes page. */

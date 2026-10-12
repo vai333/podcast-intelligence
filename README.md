@@ -47,6 +47,8 @@ Useful commands:
 | `npm run seed:demo` | Dummy history for the last ~9 weeks and 5 weekly briefs (needs an empty database) |
 | `npm run demo:clear` | Removes the demo episodes; `-- --all` empties every table to start clean |
 | `npm run backfill:real` | One-off: replaces demo history with the real episodes of the last five weeks (exact video links), then run `npm run worker:drain` |
+| `npm run import:extractions -- <file>` | Saves analyses produced outside Gemini (episode id to guests, topics, sponsors), marked metadata-only |
+| `npm run briefs:generate` | Builds the weekly briefs for the last five weeks (or given Mondays) from the analysed episodes |
 | `npm test` | Unit tests |
 | `npm run test:db` | Integration tests against your real Neon database (queue, swaps, login tokens) |
 | `DATA_SOURCE=mock npm run dev` | Dashboard on built-in sample data, no database needed |
