@@ -8,7 +8,7 @@ export function CoverageLine({ coverage }: { coverage: Coverage }) {
   return (
     <p className="flex items-start gap-2 text-sm text-muted">
       <Gauge size={16} aria-hidden className="mt-0.5 shrink-0" />
-      <span>
+      <span className="min-w-0 break-words">
         Analyzed <span className="num font-medium text-fg">{analyzed}</span> of <span className="num font-medium text-fg">{coverage.episodesFound}</span> episodes
         {coverage.analyzedMetadata ? ` (${coverage.analyzedMetadata} metadata-only)` : ""}.
         {coverage.skippedOrFailed ? ` ${coverage.skippedOrFailed} skipped or failed.` : ""}

@@ -102,15 +102,15 @@ export function BriefHome({ brief, weeks, latestWeek, showCount }: { brief: Brie
               {brief.summary.map((b) => (
                 <li key={b.text} className="flex gap-3 text-base leading-7">
                   <span aria-hidden className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
-                  <span>
+                  <span className="min-w-0 break-words">
                     {b.text}{" "}
                     {b.refs.map((r) => (
                       <Link
                         key={r.id}
                         href={`/dashboard/${r.kind === "guest" ? "guests" : r.kind === "topic" ? "topics" : "sponsors"}/${r.id}`}
-                        className="mr-3 whitespace-nowrap font-semibold text-accent hover:underline"
+                        className="mr-3 font-semibold text-accent hover:underline"
                       >
-                        {r.label} →
+                        {r.label} →
                       </Link>
                     ))}
                   </span>
@@ -125,7 +125,7 @@ export function BriefHome({ brief, weeks, latestWeek, showCount }: { brief: Brie
             {brief.lineupChanges.length ? (
               <p className="flex items-start gap-2 text-sm text-muted">
                 <ArrowRightLeft size={16} aria-hidden className="mt-0.5 shrink-0" />
-                <span>
+                <span className="min-w-0 break-words">
                   Lineup changed: {brief.lineupChanges.map((c) => `${c.showName} ${c.kind === "added" ? "added" : "removed"} ${formatIST(c.at, "day")}`).join(", ")}.{" "}
                   <Link href="/dashboard/shows" className="font-medium text-accent hover:underline">Lineup history</Link>
                 </span>
