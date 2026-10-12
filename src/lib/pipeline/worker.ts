@@ -127,3 +127,28 @@ export async function drain(opts: { maxJobs?: number; onStep?: (s: StepResult) =
   return n;
 }
 
+
+/**
+ * Work through ready jobs for up to `budgetMs`, one at a time. Returns true if more work is still ready
+ * (the caller should hand off to a fresh invocation), false when the queue is drained.
+ */
+export async function runFor(budgetMs: number): Promise<{ processed: number; more: boolean }> {
+  const started = Date.now();
+  let processed = 0;
+  for (;;) {
+    if (Date.now() - started > budgetMs) return { processed, more: await hasReadyJob() };
+    const s = await processOne();
+    if (s.idle) {
+      await finishRun();
+      return { processed, more: false };
+    }
+    processed++;
+    if (!s.more) {
+      await finishRun();
+      return { processed, more: false };
+    }
+  }
+}
+
+/** Leaves headroom under the 300s function limit for one slow job (a long video can take about a minute). */
+export const RUN_BUDGET_MS = 170_000;
